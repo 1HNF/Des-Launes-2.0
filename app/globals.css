@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+/* ─── Design tokens ──────────────────────────────────────────────────────── */
+@theme {
+  --color-ink-950:  #0a0e1a;
+  --color-ink-900:  #0f1525;
+  --color-ink-800:  #1a2035;
+  --color-ink-700:  #242d47;
+
+  --color-gold-300: #e8d5a3;
+  --color-gold-400: #d4b87a;
+  --color-gold-500: #c9a96e;
+  --color-gold-600: #b8924c;
+
+  --color-cream-50:  #fdfbf8;
+  --color-cream-100: #f5f0e8;
+  --color-cream-200: #ede4d4;
+
+  --shadow-soft: 0 4px 24px rgba(10,14,26,0.35);
+  --shadow-glow: 0 0 40px rgba(201,169,110,0.08);
+  --tracking-refined: 0.02em;
+  --tracking-wide: 0.12em;
+  --tracking-widest: 0.20em;
+}
+
+/* ─── Base ────────────────────────────────────────────────────────────────── */
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-ink-950);
+  color: var(--color-cream-100);
+  font-family: var(--font-jost), system-ui, sans-serif;
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Grain overlay ──────────────────────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.025;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ─── Layout shell ───────────────────────────────────────────────────────── */
+.container-shell {
+  @apply mx-auto w-full max-w-6xl px-6 sm:px-8;
+}
+
+/* ─── Gold hairline divider ──────────────────────────────────────────────── */
+.hairline {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(201,169,110,0.18),
+    transparent
+  );
+}
+
+/* ─── Typography helpers ─────────────────────────────────────────────────── */
+.font-serif {
+  font-family: var(--font-cormorant), Georgia, serif;
+}
+
+.eyebrow-label {
+  @apply flex items-center gap-3 text-[0.65rem] tracking-[0.2em] uppercase;
+  color: var(--color-gold-500);
+}
+.eyebrow-label::before {
+  content: '';
+  display: block;
+  width: 22px;
+  height: 1px;
+  background: var(--color-gold-500);
+  opacity: 0.6;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────────────── */
+.btn-gold {
+  @apply inline-flex items-center gap-2 px-6 py-3 text-[0.72rem] font-medium tracking-[0.14em] uppercase transition-all;
+  background: var(--color-gold-500);
+  color: var(--color-ink-950);
+}
+.btn-gold:hover {
+  background: var(--color-gold-300);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  @apply inline-flex items-center gap-2 px-6 py-3 text-[0.72rem] font-light tracking-[0.14em] uppercase transition-all;
+  border: 1px solid rgba(201,169,110,0.25);
+  color: var(--color-cream-100);
+}
+.btn-outline:hover {
+  border-color: var(--color-gold-500);
+  color: var(--color-gold-500);
+  transform: translateY(-1px);
+}
+
+/* ─── Cards ──────────────────────────────────────────────────────────────── */
+.card-dark {
+  background: rgba(245,240,232,0.04);
+  border: 1px solid rgba(201,169,110,0.12);
+  position: relative;
+}
+.card-dark::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(to right, var(--color-gold-500), transparent);
+}
+
+/* ─── Scroll reveal ──────────────────────────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1),
+              transform 0.7s cubic-bezier(0.16,1,0.3,1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-d1 { transition-delay: 0.1s; }
+.reveal-d2 { transition-delay: 0.2s; }
+.reveal-d3 { transition-delay: 0.3s; }
+.reveal-d4 { transition-delay: 0.4s; }
+.reveal-d5 { transition-delay: 0.5s; }
+
+/* ─── Form inputs ────────────────────────────────────────────────────────── */
+.input-dark {
+  width: 100%;
+  background: rgba(245,240,232,0.04);
+  border: 1px solid rgba(201,169,110,0.15);
+  color: var(--color-cream-100);
+  font-family: var(--font-jost), system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 300;
+  padding: 0.75rem 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+.input-dark:focus {
+  border-color: var(--color-gold-500);
+}
+.input-dark::placeholder {
+  color: rgba(245,240,232,0.25);
+}
+.input-dark option {
+  background: var(--color-ink-800);
+  color: var(--color-cream-100);
+}
