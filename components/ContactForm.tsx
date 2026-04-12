@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from "react";
 
-type ContactPayload = {
+const FORMSPREE_ENDPOINT = "https://formspree.io/f/mnjlajky";
+
+type FormPayload = {
   firstName: string;
   lastName: string;
   email: string;
@@ -11,16 +13,12 @@ type ContactPayload = {
   message: string;
 };
 
-type ApiSuccess = { ok: true };
-type ApiError = { ok: false; error: string };
-type ApiResponse = ApiSuccess | ApiError;
-
 function isEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
 export function ContactForm() {
-  const [payload, setPayload] = useState<ContactPayload>({
+  const [payload, setPayload] = useState<FormPayload>({
     firstName: "",
     lastName: "",
     email: "",
@@ -29,7 +27,8 @@ export function ContactForm() {
     message: ""
   });
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<ApiResponse | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const canSubmit = useMemo(() => {
     return (
@@ -40,33 +39,46 @@ export function ContactForm() {
     );
   }, [payload, submitting]);
 
-  function set(key: keyof ContactPayload) {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-      setPayload((p) => ({ ...p, [key]: e.target.value }));
+  function set(key: keyof FormPayload) {
+    return (
+      e: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >
+    ) => setPayload((p) => ({ ...p, [key]: e.target.value }));
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setResult(null);
+    setError(null);
     setSubmitting(true);
+
     try {
-      const name = `${payload.firstName} ${payload.lastName}`;
-      const message = payload.message || `Profile: ${payload.profile || "Not specified"}`;
-      const res = await fetch("/api/contact", {
+      const res = await fetch(FORMSPREE_ENDPOINT, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email: payload.email, message })
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          name: `${payload.firstName} ${payload.lastName}`,
+          email: payload.email,
+          organisation: payload.organisation || "Not provided",
+          profile: payload.profile || "Not specified",
+          message: payload.message || "No message provided"
+        })
       });
-      const data = (await res.json()) as ApiResponse;
-      setResult(data);
+
+      if (res.ok) {
+        setSuccess(true);
+      } else {
+        const data = await res.json();
+        setError(data?.errors?.[0]?.message ?? "Something went wrong. Please try again.");
+      }
     } catch {
-      setResult({ ok: false, error: "Network error. Please try again." });
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
   }
 
-  if (result?.ok) {
+  if (success) {
     return (
       <div
         className="flex flex-col items-center gap-4 py-12 text-center"
@@ -76,17 +88,33 @@ export function ContactForm() {
           className="flex h-12 w-12 items-center justify-center"
           style={{ border: "1px solid var(--color-gold-500)" }}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-gold-500)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--color-gold-500)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
         <h3
           className="text-[1.5rem]"
-          style={{ fontFamily: "var(--font-cormorant)", fontWeight: 300, color: "var(--color-cream-50)" }}
+          style={{
+            fontFamily: "var(--font-cormorant)",
+            fontWeight: 300,
+            color: "var(--color-cream-50)"
+          }}
         >
           Request Received
         </h3>
-        <p className="max-w-xs text-[0.85rem] leading-relaxed" style={{ color: "rgba(245,240,232,0.5)" }}>
+        <p
+          className="max-w-xs text-[0.85rem] leading-relaxed"
+          style={{ color: "rgba(245,240,232,0.5)" }}
+        >
           Thank you. We will review your enquiry and respond within 2 business days.
         </p>
       </div>
@@ -97,7 +125,10 @@ export function ContactForm() {
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
-          <label className="text-[0.62rem] tracking-[0.15em] uppercase" style={{ color: "rgba(245,240,232,0.4)" }}>
+          <label
+            className="text-[0.62rem] tracking-[0.15em] uppercase"
+            style={{ color: "rgba(245,240,232,0.4)" }}
+          >
             First Name
           </label>
           <input
@@ -110,7 +141,10 @@ export function ContactForm() {
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-[0.62rem] tracking-[0.15em] uppercase" style={{ color: "rgba(245,240,232,0.4)" }}>
+          <label
+            className="text-[0.62rem] tracking-[0.15em] uppercase"
+            style={{ color: "rgba(245,240,232,0.4)" }}
+          >
             Last Name
           </label>
           <input
@@ -125,7 +159,10 @@ export function ContactForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-[0.62rem] tracking-[0.15em] uppercase" style={{ color: "rgba(245,240,232,0.4)" }}>
+        <label
+          className="text-[0.62rem] tracking-[0.15em] uppercase"
+          style={{ color: "rgba(245,240,232,0.4)" }}
+        >
           Email Address
         </label>
         <input
@@ -140,7 +177,10 @@ export function ContactForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-[0.62rem] tracking-[0.15em] uppercase" style={{ color: "rgba(245,240,232,0.4)" }}>
+        <label
+          className="text-[0.62rem] tracking-[0.15em] uppercase"
+          style={{ color: "rgba(245,240,232,0.4)" }}
+        >
           Organisation / Fund (optional)
         </label>
         <input
@@ -153,10 +193,17 @@ export function ContactForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-[0.62rem] tracking-[0.15em] uppercase" style={{ color: "rgba(245,240,232,0.4)" }}>
+        <label
+          className="text-[0.62rem] tracking-[0.15em] uppercase"
+          style={{ color: "rgba(245,240,232,0.4)" }}
+        >
           Investor Profile
         </label>
-        <select className="input-dark" value={payload.profile} onChange={set("profile")}>
+        <select
+          className="input-dark"
+          value={payload.profile}
+          onChange={set("profile")}
+        >
           <option value="">Select your profile</option>
           <option>Private investor</option>
           <option>Family office</option>
@@ -167,7 +214,10 @@ export function ContactForm() {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-[0.62rem] tracking-[0.15em] uppercase" style={{ color: "rgba(245,240,232,0.4)" }}>
+        <label
+          className="text-[0.62rem] tracking-[0.15em] uppercase"
+          style={{ color: "rgba(245,240,232,0.4)" }}
+        >
           Message (optional)
         </label>
         <textarea
@@ -179,31 +229,52 @@ export function ContactForm() {
         />
       </div>
 
-      <p className="text-[0.7rem] leading-relaxed" style={{ color: "rgba(245,240,232,0.28)" }}>
-        Your enquiry will be treated with strict confidentiality. We respond to qualified enquiries within 2 business days.
+      <p
+        className="text-[0.7rem] leading-relaxed"
+        style={{ color: "rgba(245,240,232,0.28)" }}
+      >
+        Your enquiry will be treated with strict confidentiality. We respond to
+        qualified enquiries within 2 business days.
       </p>
 
       <button
         type="submit"
         disabled={!canSubmit}
         className="btn-gold justify-center"
-        style={{ opacity: canSubmit ? 1 : 0.4, cursor: canSubmit ? "pointer" : "not-allowed" }}
+        style={{
+          opacity: canSubmit ? 1 : 0.4,
+          cursor: canSubmit ? "pointer" : "not-allowed"
+        }}
       >
         {submitting ? "Sending…" : "Send Request"}
         {!submitting && (
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
           </svg>
         )}
       </button>
 
-      {result && !result.ok && (
+      {error && (
         <div
           className="p-4 text-[0.8rem]"
-          style={{ border: "1px solid rgba(220,80,80,0.3)", color: "#e88a8a", background: "rgba(220,80,80,0.05)" }}
+          style={{
+            border: "1px solid rgba(220,80,80,0.3)",
+            color: "#e88a8a",
+            background: "rgba(220,80,80,0.05)"
+          }}
           role="alert"
         >
-          {result.error}
+          {error}
         </div>
       )}
     </form>
