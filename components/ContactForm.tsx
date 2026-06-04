@@ -2,8 +2,6 @@
 
 import { useMemo, useState } from "react";
 
-const FORMSPREE_ENDPOINT = "https://formspree.io/f/mnjlajky";
-
 type FormPayload = {
   firstName: string;
   lastName: string;
@@ -53,10 +51,11 @@ export function ContactForm() {
     setSubmitting(true);
 
     try {
-      const res = await fetch(FORMSPREE_ENDPOINT, {
+      const res = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          access_key: "d20cf682-4477-4ba9-b7f4-63ddb3b0b58e",
           name: `${payload.firstName} ${payload.lastName}`,
           email: payload.email,
           organisation: payload.organisation || "Not provided",
@@ -65,11 +64,12 @@ export function ContactForm() {
         })
       });
 
-      if (res.ok) {
+      const data = await res.json();
+
+      if (res.ok && data?.success === true) {
         setSuccess(true);
       } else {
-        const data = await res.json();
-        setError(data?.errors?.[0]?.message ?? "Something went wrong. Please try again.");
+        setError(data?.message ?? "Something went wrong. Please try again.");
       }
     } catch {
       setError("Network error. Please check your connection and try again.");
